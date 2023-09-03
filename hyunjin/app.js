@@ -54,9 +54,23 @@ class App {
     this.app.get('/users', async (_, res, next) => {
       try {
         await this.dataSource.query(`SELECT * FROM users`, (err, rows) => {
-          res.status(200).json(rows);
-          next(err);
+          return res.status(200).json({ users: rows });
         });
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
+    this.app.post('/users', async (req, res, next) => {
+      try {
+        const { email, name, profile_image, password } = req.body;
+        await this.dataSource.query(
+          `
+            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
+            `,
+          [email, name, profile_image, password],
+        );
+        return res.status(201).json({ message: 'userCreated' });
       } catch (err) {
         console.error(err);
         next(err);
