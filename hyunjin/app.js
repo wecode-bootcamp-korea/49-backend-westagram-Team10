@@ -43,20 +43,9 @@ class App {
       });
   }
   useRouting() {
-    this.app.get('/', (_, res, next) => {
+    this.app.use('/', (_, res, next) => {
       try {
         res.status(200).json({ message: 'westagram' });
-      } catch (err) {
-        console.error(err);
-        next(err);
-      }
-    });
-    this.app.get('/users', async (_, res, next) => {
-      try {
-        await this.dataSource.query(`SELECT * FROM users`, (err, rows) => {
-          res.status(200).json(rows);
-          next(err);
-        });
       } catch (err) {
         console.error(err);
         next(err);
