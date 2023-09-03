@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors');
 require('dotenv').config();
 const { DataSource } = require('typeorm');
 
@@ -18,6 +19,7 @@ class App {
     this.app.set('port', process.env.PORT || 8000);
   }
   setMiddleware() {
+    this.app.use(cors());
     this.app.use(morgan('dev'));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
