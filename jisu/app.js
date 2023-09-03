@@ -60,10 +60,44 @@ const createUser = async (req, res) => {
   }
 };
 
+const createPost = async (req, res) => {
+  try {
+    const body = req.body;
+    const result = await appDataSource.query(
+      `INSERT INTO posts
+      (title, content, user_id, post_image_url)
+      VALUES
+      ('${body.title}', '${body.content}',
+      '${body.user_id}', '${body.post_image_url}')`);
+    return res.status(201).json({ "message": "postCreated" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getPosts = async (req, res) => {
+  try {
+    const result = await appDataSource.query(
+      `SELECT
+      posts.user_id AS userId,
+      users.profile_image AS userProfileImage,
+      posts.id AS postingId,
+      posts.post_image_url AS postingImageURL,
+      posts.content AS postingContent
+      FROM posts
+      JOIN users ON posts.user_id = users.id`
+    );
+    return res.status(200).json({ "data": result });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 app.get('/', getGreeting);
 app.get('/users', getUsers);
 app.post('/users', createUser);
-
+app.post('/posts', createPost);
+app.get('/posts', getPosts);
 
 const server = http.createServer(app);
 
