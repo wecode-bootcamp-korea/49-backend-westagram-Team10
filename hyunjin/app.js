@@ -42,7 +42,16 @@ class App {
         console.error(err);
       });
   }
-  useRouting() {}
+  useRouting() {
+    this.app.use('/', (_, res, next) => {
+      try {
+        res.status(200).json({ message: 'westagram' });
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
+  }
   status404() {
     this.app.use((req, res, next) => {
       const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
