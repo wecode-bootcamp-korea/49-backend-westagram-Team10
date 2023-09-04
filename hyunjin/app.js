@@ -76,6 +76,25 @@ class App {
         next(err);
       }
     });
+    this.app.post('/posts', async (req, res, next) => {
+      try {
+        const { title, content } = req.body;
+        const { id } = req.query;
+        if (id) {
+          await this.dataSource.query(
+            `
+            INSERT INTO posts (title, content, user_id) VALUES (?,?,?)
+            `,
+            [title, content, parseInt(id)],
+          );
+          return res.status(201).json({ message: 'userCreated' });
+        }
+        return res.status(401).json({ message: 'anAuthorized' });
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
   }
   status404() {
     this.app.use((req, _, next) => {
