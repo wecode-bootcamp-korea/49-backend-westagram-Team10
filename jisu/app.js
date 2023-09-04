@@ -133,7 +133,7 @@ const updatePost = async (req, res) => {
     const oldPost = await appDataSource.query(
       `SELECT * 
       FROM posts 
-      WHERE posts.id = ${req.params.id};`
+      WHERE posts.id = ${req.params.post_id};`
     );
 
     if (oldPost[0].user_id !== body.user_id) {
@@ -144,7 +144,7 @@ const updatePost = async (req, res) => {
       `UPDATE posts
       SET content = '${body.content}',
       post_image_url = '${body.post_image_url}'
-      WHERE posts.id = ${req.params.id};`);
+      WHERE posts.id = ${req.params.post_id};`);
 
     const result = await appDataSource.query(
       `SELECT
@@ -155,7 +155,7 @@ const updatePost = async (req, res) => {
       posts.content AS postingContent
       FROM users
       JOIN posts ON posts.user_id = users.id
-      WHERE posts.id = ${req.params.id};`
+      WHERE posts.id = ${req.params.post_id};`
     );
     
     return res.status(200).json({ "data": result });
@@ -219,7 +219,7 @@ app.post('/users', createUser);
 app.post('/posts', createPost);
 app.get('/posts', getPosts);
 app.get('/users/:user_id/posts', getUserPosts);
-app.put('/posts/:id', updatePost);
+app.put('/posts/:post_id', updatePost);
 app.delete('/posts/:id', deletePost);
 app.post('/likes/:id', toggleLike);
 
