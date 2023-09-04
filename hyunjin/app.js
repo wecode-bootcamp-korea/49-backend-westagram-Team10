@@ -149,6 +149,35 @@ class App {
         next(err);
       }
     });
+    this.app.patch('/posts', async (req, res, next) => {
+      try {
+        const { content, post_id } = req.body;
+        const { id } = req.query;
+        if (id) {
+          await this.dataSource.query(
+            `
+            UPDATE posts SET content="${content}" WHERE user_id=${parseInt(
+              id,
+            )} AND id=${post_id}
+            `,
+          );
+          await this.dataSource.query(
+            `SELECT users.id, users.name, posts.id AS post_id, posts.title, posts.content
+            FROM users
+            LEFT JOIN posts ON users.id = posts.user_id
+            WHERE user_id = ${parseInt(id)} AND posts.id = ${post_id}
+            `,
+            (err, rows) => {
+              return res.status(201).json({ data: rows });
+            },
+          );
+        }
+        return res.status(401).json({ message: 'unAuthorized' });
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
   }
   status404() {
     this.app.use((req, _, next) => {
