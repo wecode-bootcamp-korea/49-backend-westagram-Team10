@@ -86,6 +86,9 @@ class App {
             LEFT JOIN posts ON users.id = posts.user_id
             WHERE users.id = ${parseInt(id)}`,
             (err, rows) => {
+              if (!rows.length) {
+                return res.status(400).json({ message: 'bad request' });
+              }
               return res.status(200).json({
                 data: {
                   userId: rows[0].id,
