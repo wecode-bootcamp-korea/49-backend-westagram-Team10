@@ -54,7 +54,7 @@ app.get('/users', async(req, res) => {
 	}
 })
 
-//2. users 생성
+//과제 2. users 생성
 
 app.post('/users', async(req, res) => {
   try {
@@ -97,13 +97,63 @@ app.post('/users', async(req, res) => {
 })
 
 
-// 과제 4 UPDATE
-// 1번 user의 이름을 'Code Kim'으로 바꾸어 보세요.
+// 과제 3. 게시글 등록
+
+app.post("/posts", async(req, res) => {
+  try {
+
+    // posts 정보를 frontend에서 받는다.
+    const newPost = req.body
+
+    // posts 정보 확인해보기
+    console.log("newPost : ", newPost)
+
+    // database 에 저장하기
+    const title2 = newPost.title
+    const content2 = newPost.content
+    const user_id2 = newPost.user_id
+
+    const postData = await myDataSource.query(`
+      INSERT INTO posts (
+        title,
+        content,
+        user_id
+      )
+      VALUES (
+        '${title2}',
+        '${content2}',
+        '${user_id2}'
+      )
+    `)
+    // db 저장 여부 확인
+    console.log('inserted post id : ', postData.insertId )
+
+    //send response to FRONTEND
+		return res.status(201).json({
+      "message": "포스팅 완료!" 
+		})
+  } catch (err) {
+    console.log(err)
+  }
+})
+
+// 과제 4. 전체 게시글 조회
+
+
+// 과제 5. 게시글 등록
+
+// 과제 6. 유저의 게시글 조회
+
+// 과제 7. 게시글 수정하기
+
+// 과제 8. 게시글 삭제하기
+
+// 과제 9. 좋아요 누르기
 
 
 
+// ------------------------서버시작----------------------
 
-// 서버시작
 const server = http.createServer(app) // express app 으로 서버를 만듭니다.
 
 const start = async () => { // 서버를 시작하는 함수입니다.
