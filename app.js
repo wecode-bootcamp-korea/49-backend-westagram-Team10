@@ -11,6 +11,7 @@ const myDataSource = new DataSource({
  database: 'westagram'
 })
 
+
 const app = express()
 
 app.use(express.json()) // for parsing application/json
@@ -23,7 +24,7 @@ app.get("/", async(req, res) => {
   }
 })
 
-//1. API 로 users 화면에 보여주기
+//1. API 로 users 화면에 보여주기!
 app.get('/users', async(req, res) => {
 	try {
     // query DB with SQL
