@@ -96,7 +96,6 @@ app.post('/users', async(req, res) => {
 	}
 })
 
-
 // 과제 3. 게시글 등록
 
 app.post("/posts", async(req, res) => {
@@ -130,7 +129,7 @@ app.post("/posts", async(req, res) => {
 
     //send response to FRONTEND
 		return res.status(201).json({
-      "message": "포스팅 완료!" 
+      "message": "postCreated" 
 		})
   } catch (err) {
     console.log(err)
@@ -138,17 +137,46 @@ app.post("/posts", async(req, res) => {
 })
 
 // 과제 4. 전체 게시글 조회
+  app.get('/posts', async(req, res) => {
+    try {
 
+      // 쿼리문으로 데이터베이스에서 가져오기
+      const postData = await myDataSource.query(`SELECT * FROM posts`)
 
-// 과제 5. 게시글 등록
+      // console로 확인
+      console.log("postData : ", postData)
 
-// 과제 6. 유저의 게시글 조회
+      // front 전달
+      return res.status(201).json({
+        "data" : postData
+      })
+    } catch (err){
+      console.log(err)
+    }
+  })
 
-// 과제 7. 게시글 수정하기
+// 과제 5. 유저의 게시글 조회
+app.get('/posts/{id}', async(req, res) => {
+  try {
 
-// 과제 8. 게시글 삭제하기
+    const userPostData = await myDataSource.query(`
+      SELECT 
+        i
+    `)
+    // 쿼리문으로 데이터베이스에서 가져오기
+    return res.status(201).json({
+      "data" : userPostData
+    })
+  } catch (err) {
+    console.log(err)
+  }
+})
 
-// 과제 9. 좋아요 누르기
+// 과제 6. 게시글 수정하기
+
+// 과제 7. 게시글 삭제하기
+
+// 과제 8. 좋아요 누르기
 
 
 
@@ -158,7 +186,7 @@ const server = http.createServer(app) // express app 으로 서버를 만듭니�
 
 const start = async () => { // 서버를 시작하는 함수입니다.
   try {
-    server.listen(8000, () => console.log(`Server is listening on 8000`))
+    server.listen(8001, () => console.log(`Server is listening on 8001`))
   } catch (err) { 
     console.error(err)
   }
