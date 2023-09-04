@@ -25,7 +25,6 @@ app.use(cors());//모든 request에 대해 CORS 요청을 설정하는 법
 app.use(morgan('combined')); 
 
 app.use(express.json()); // for parsing application/json
-app.use(bodyParser.json());
 
 // 기능함수 생성
 const welcome = async (req, res) => {
@@ -68,25 +67,6 @@ const addUser = async (req, res) => {
     }
 };
 // {"name":"동훈", "password":"자동차좋아요", "email": "email@email.com"}
-
-const delUser = async (req, res) => {
-    try {
-        const delData = users.pop()
-        return res.status(204).json({ "Delete Successful": delData })
-    } catch (err) {
-        console.log(err)
-    }
-};
-
-const updateUser = async (req, res) => {
-    try {
-        const newData = req.body
-        users[0].name = newData.data.name
-        return res.status(200).json({ "It will Work.": "I Promise" })
-    } catch (err) {
-        console.log(err)
-    }
-};
 
 const addPost = async (req, res) => {
     try {
@@ -156,6 +136,19 @@ const delPosts = async (req, res) => {
         console.log(err)
     }
 }
+
+const likePost = async (req, res) => {
+    try {
+        const userId = req.params.user_id;
+        console.log(userId)
+        const postId = req.body.postId;
+        console.log(postId)
+        const likePost = await myDataSource.query(`INSERT INTO likes (user_id, post_id) VALUES ("${userId}", "${postId}")`)
+        return res.status(204).json({ "message" : "likeCreated" })
+    } catch (err) {
+        console.log(err)
+    }
+}
 // API Lists
 
 //0. Server Launch Message
@@ -183,23 +176,7 @@ app.post('/update/posts/:post_id', updatePost)
 app.put('/del/posts/:post_id', delPosts)
 
 // Assignment 8. 좋아요 누르기
-
-// 가장 마지막 user를 삭제하는 엔드포인트
-app.delete("/del/users", delUser);
-
-// 과제 4 UPDATE
-// 1번 user의 이름을 'Code Kim'으로 바꾸어 보세요.
-app.put("/update/users", jsonParser, updateUser);
-
-
-// // 4. 게시글 수정하기
-// app.get("/foodReview", async (req, res) => {
-//     try {
-//         return res.status(200).json();
-//     } catch (err) {
-//         console.log(err);
-//     }
-// });
+app.post('/likes/:user_id', likePost)
 
 const server = http.createServer(app); // express app 으로 서버를 만듭니다.
 

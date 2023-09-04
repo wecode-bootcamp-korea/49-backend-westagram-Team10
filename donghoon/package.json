@@ -70,6 +70,7 @@
     "mime-types": "^2.1.35",
     "minimatch": "^5.1.6",
     "mkdirp": "^2.1.6",
+    "morgan": "^1.10.0",
     "ms": "^2.0.0",
     "mz": "^2.7.0",
     "negotiator": "^0.6.3",
@@ -115,7 +116,8 @@
     "yargs-parser": "^21.1.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start" : "nodemon westagram_backend.js"
   },
   "keywords": [],
   "author": "",
