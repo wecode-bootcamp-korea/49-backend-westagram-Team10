@@ -186,7 +186,7 @@ const deletePost = async (req, res) => {
 
 const toggleLike = async (req, res) => {
   try {
-    const postId = req.params.id;
+    const postId = req.body.post_id;
     const userId = req.body.user_id;
     const duplicateLike = await appDataSource.query(
       `SELECT * FROM likes
@@ -222,7 +222,7 @@ app.get('/posts', getPosts);
 app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:post_id', updatePost);
 app.delete('/posts/:post_id', deletePost);
-app.post('/likes/:id', toggleLike);
+app.post('/likes', toggleLike);
 
 const server = http.createServer(app);
 
