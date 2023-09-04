@@ -76,35 +76,12 @@ class App {
         next(err);
       }
     });
-    this.app.get('/posts', async (_, res, next) => {
-      try {
-        await this.dataSource.query(
-          `SELECT users.id, users.profile_image, users.name, posts.id AS post_id, posts.content
-          FROM users
-          LEFT JOIN posts ON users.id = posts.user_id
-          `,
-          (err, rows) => {
-            return res.status(200).json({
-              data: rows.map((row) => ({
-                userId: row.id,
-                userProfileImage: row.profile_image,
-                postingId: row.post_id,
-                postingContent: row.content,
-              })),
-            });
-          },
-        );
-      } catch (err) {
-        console.error(err);
-        next(err);
-      }
-    });
     this.app.get('/posts/:id', async (req, res, next) => {
       try {
         const { id } = req.params;
         if (id) {
           await this.dataSource.query(
-            `SELECT users.id, users.name, users.profile_image, posts.id, posts.content
+            `SELECT users.id, users.name, users.profile_image,posts.id, posts.content
             FROM users  
             LEFT JOIN posts ON users.id = posts.user_id
             WHERE users.id = ${parseInt(id)}`,
