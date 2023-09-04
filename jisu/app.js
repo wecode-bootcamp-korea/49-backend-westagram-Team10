@@ -109,7 +109,7 @@ const getUserPosts = async (req, res) => {
       users.id AS userId,
       users.profile_image AS userProfileImage
       FROM users
-      WHERE users.id = ${req.params.id};`
+      WHERE users.id = ${req.params.user_id};`
     );
     const posts = await appDataSource.query(
       `SELECT
@@ -117,7 +117,7 @@ const getUserPosts = async (req, res) => {
       posts.post_image_url AS postingImageURL,
       posts.content AS postingContent
       FROM posts
-      WHERE posts.user_id = ${req.params.id};`
+      WHERE posts.user_id = ${req.params.user_id};`
     );
     result = user[0];
     result['postings'] = posts;
@@ -218,7 +218,7 @@ app.get('/users', getUsers);
 app.post('/users', createUser);
 app.post('/posts', createPost);
 app.get('/posts', getPosts);
-app.get('/users/posts/:id', getUserPosts);
+app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:id', updatePost);
 app.delete('/posts/:id', deletePost);
 app.post('/likes/:id', toggleLike);
