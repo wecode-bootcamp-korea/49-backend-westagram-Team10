@@ -172,6 +172,11 @@ const deletePost = async (req, res) => {
       `DELETE FROM likes
       WHERE post_id = ${postId}`
     );
+
+    const deleteFromComments = await appDataSource.query(
+      `DELETE FROM comments
+      WHERE post_id = ${postId}`
+    );
     
     const result = await appDataSource.query(
       `DELETE FROM posts
