@@ -119,7 +119,7 @@ class App {
           );
           return res.status(201).json({ message: 'userCreated' });
         }
-        return res.status(401).json({ message: 'anAuthorized' });
+        return res.status(401).json({ message: 'unAuthorized' });
       } catch (err) {
         console.error(err);
         next(err);
