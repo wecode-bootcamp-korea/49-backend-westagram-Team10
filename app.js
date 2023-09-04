@@ -156,12 +156,23 @@ app.post("/posts", async(req, res) => {
   })
 
 // 과제 5. 유저의 게시글 조회
-app.get('/posts/{id}', async(req, res) => {
+
+/*app.get('/posts/:id', async(req, res) => {
+  //엔드포인트를 사용하여 특정 사용자의 게시글을 조회하려면 URL의 경로 매개변수로 사용자 ID를 받아와야 합니다. 
   try {
 
+    const userId = req.params.id; // URL에서 사용자 ID를 가져옵니다.
+    
     const userPostData = await myDataSource.query(`
       SELECT 
-        i
+        users.id as userId,
+        users.profile_image,
+        posts.id,
+        posts.image_url,
+        posts.content
+      FROM users
+      JOIN posts ON users.id = posts.user_id
+      WHERE users.id = ${userId}
     `)
     // 쿼리문으로 데이터베이스에서 가져오기
     return res.status(201).json({
@@ -170,9 +181,19 @@ app.get('/posts/{id}', async(req, res) => {
   } catch (err) {
     console.log(err)
   }
-})
+})*/
 
 // 과제 6. 게시글 수정하기
+
+app.put('/posts/', async(req, res) => {
+
+  try {
+
+    return 
+  } catch (err) {
+    console.log(err)
+  }
+})
 
 // 과제 7. 게시글 삭제하기
 
