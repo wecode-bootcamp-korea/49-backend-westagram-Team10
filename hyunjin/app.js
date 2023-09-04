@@ -76,6 +76,23 @@ class App {
         next(err);
       }
     });
+    this.app.get('/posts/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        console.log(id);
+        if (id) {
+          await this.dataSource.query(
+            `SELECT * FROM posts WHERE user_id=${parseInt(id)}`,
+            (err, rows) => {
+              return res.status(200).json({ posts: rows });
+            },
+          );
+        }
+        return res.status(401).json({ message: 'anAuthorized' });
+      } catch (err) {
+        console.error(err);
+      }
+    });
     this.app.post('/posts', async (req, res, next) => {
       try {
         const { title, content } = req.body;
