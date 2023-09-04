@@ -76,7 +76,7 @@ class App {
         next(err);
       }
     });
-    this.app.get('/posts/:id', async (req, res) => {
+    this.app.get('/posts/:id', async (req, res, next) => {
       try {
         const { id } = req.params;
         if (id) {
@@ -104,6 +104,7 @@ class App {
         return res.status(401).json({ message: 'unAuthorized' });
       } catch (err) {
         console.error(err);
+        next(err);
       }
     });
     this.app.post('/posts', async (req, res, next) => {
