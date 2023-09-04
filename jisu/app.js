@@ -129,11 +129,12 @@ const getUserPosts = async (req, res) => {
 
 const updatePost = async (req, res) => {
   try {
+    const post_id = req.params.post_id;
     const body = req.body;
     const oldPost = await appDataSource.query(
       `SELECT * 
       FROM posts 
-      WHERE posts.id = ${req.params.post_id};`
+      WHERE posts.id = ${post_id};`
     );
 
     if (oldPost[0].user_id !== body.user_id) {
@@ -144,7 +145,7 @@ const updatePost = async (req, res) => {
       `UPDATE posts
       SET content = '${body.content}',
       post_image_url = '${body.post_image_url}'
-      WHERE posts.id = ${req.params.post_id};`);
+      WHERE posts.id = ${post_id};`);
 
     const result = await appDataSource.query(
       `SELECT
@@ -155,7 +156,7 @@ const updatePost = async (req, res) => {
       posts.content AS postingContent
       FROM users
       JOIN posts ON posts.user_id = users.id
-      WHERE posts.id = ${req.params.post_id};`
+      WHERE posts.id = ${post_id};`
     );
     
     return res.status(200).json({ "data": result });
@@ -166,7 +167,7 @@ const updatePost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   try {
-    const postId = req.params.id;
+    const postId = req.params.post_id;
     const deleteFromLikes = await appDataSource.query(
       `DELETE FROM likes
       WHERE post_id = ${postId}`
@@ -220,7 +221,7 @@ app.post('/posts', createPost);
 app.get('/posts', getPosts);
 app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:post_id', updatePost);
-app.delete('/posts/:id', deletePost);
+app.delete('/posts/:post_id', deletePost);
 app.post('/likes/:id', toggleLike);
 
 const server = http.createServer(app);
