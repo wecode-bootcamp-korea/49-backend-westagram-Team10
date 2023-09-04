@@ -82,9 +82,21 @@ class App {
         console.log(id);
         if (id) {
           await this.dataSource.query(
-            `SELECT * FROM posts WHERE user_id=${parseInt(id)}`,
+            `SELECT users.id, users.name, users.profile_image,posts.id, posts.content
+            FROM users  
+            LEFT JOIN posts ON users.id = posts.user_id
+            WHERE users.id = ${parseInt(id)}`,
             (err, rows) => {
-              return res.status(200).json({ posts: rows });
+              console.log(rows);
+              return res.status(200).json({
+                data: {
+                  userId: rows[0].id,
+                  userProfileImage: rows[0].profile_image,
+                  postings: rows.map((raw) => {
+                    return { postingId: raw.id, postingContent: raw.content };
+                  }),
+                },
+              });
             },
           );
         }
