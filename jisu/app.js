@@ -81,6 +81,7 @@ const createUser = async (req, res) => {
       return res.status(201).json({ "message": "userCreated" });
   } catch (error) {
     console.log(error);
+    return res.status(error.status).json({ "message": error.message });
   }
 };
 
