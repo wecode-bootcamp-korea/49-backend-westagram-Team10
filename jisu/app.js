@@ -145,26 +145,33 @@ const getPosts = async (req, res) => {
 
 const getUserPosts = async (req, res) => {
   try {
+    const userId = req.params.user_id;
     const user = await appDataSource.query(
       `SELECT
       users.id AS userId,
       users.profile_image AS userProfileImage
       FROM users
-      WHERE users.id = ${req.params.user_id};`
+      WHERE users.id = ${userId};`
     );
+
+    
+    result = user[0];
+    const userNotFound = !result;
+    throwError(userNotFound, 404, "USER_NOT_FOUND");
+
     const posts = await appDataSource.query(
       `SELECT
       posts.id AS postingId,
       posts.post_image_url AS postingImageURL,
       posts.content AS postingContent
       FROM posts
-      WHERE posts.user_id = ${req.params.user_id};`
+      WHERE posts.user_id = ${userId};`
     );
-    result = user[0];
     result['postings'] = posts;
     return res.status(200).json({ "data": result });
   } catch (error) {
     console.log(error);
+    return res.status(error.status).json({ "message": error.message });
   }
 };
 
