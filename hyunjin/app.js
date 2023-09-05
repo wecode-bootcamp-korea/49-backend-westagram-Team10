@@ -63,7 +63,6 @@ class App {
     });
     this.app.post('/users', async (req, res, next) => {
       try {
-        const error = new Error();
         const { email, name, profile_image, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
@@ -79,9 +78,7 @@ class App {
           );
           return res.status(201).json({ message: 'userCreated' });
         } else {
-          error.message = 'bad request';
-          error.status = 400;
-          throw error;
+          this.throwError(400);
         }
       } catch (err) {
         console.error(err);
@@ -113,7 +110,6 @@ class App {
     });
     this.app.get('/posts/:id', async (req, res, next) => {
       try {
-        const error = new Error();
         const { id } = req.params;
         if (id) {
           await this.dataSource.query(
@@ -123,9 +119,7 @@ class App {
             WHERE users.id = ${parseInt(id)}`,
             (err, rows) => {
               if (!rows.length) {
-                error.message = 'key error';
-                error.status = 400;
-                throw error;
+                this.throwError(400);
               }
               return res.status(200).json({
                 data: {
@@ -139,16 +133,13 @@ class App {
             },
           );
         }
-        error.message = 'unAuthorized';
-        error.status = 401;
-        throw error;
+        this.throwError(401);
       } catch (err) {
         next(err);
       }
     });
     this.app.post('/posts', async (req, res, next) => {
       try {
-        const error = new Error();
         const { title, content } = req.body;
         const { id } = req.query;
         if (id) {
@@ -160,16 +151,13 @@ class App {
           );
           return res.status(201).json({ message: 'post created' });
         }
-        error.message = 'unAuthorized';
-        error.status = 401;
-        throw error;
+        this.throwError(401);
       } catch (err) {
         console.error(err);
         next(err);
       }
     });
     this.app.patch('/posts', async (req, res, next) => {
-      const error = new Error();
       try {
         const { content, post_id } = req.body;
         const { id } = req.query;
@@ -192,9 +180,7 @@ class App {
             },
           );
         }
-        error.message = 'unAuthorized';
-        error.status = 401;
-        throw error;
+        this.throwError(401);
       } catch (err) {
         console.error(err);
         next(err);
@@ -202,7 +188,6 @@ class App {
     });
     this.app.delete('/posts', async (req, res, next) => {
       try {
-        const error = new Error();
         const { post_id } = req.body;
         const { id } = req.query;
         if (id) {
@@ -211,9 +196,7 @@ class App {
           );
           return res.status(200).json({ message: 'post deleted' });
         }
-        error.message = 'unAuthorized';
-        error.status = 401;
-        throw error;
+        this.throwError(401);
       } catch (err) {
         console.error(err);
         next(err);
@@ -222,6 +205,21 @@ class App {
   }
   isValidData(reg, validationTarget) {
     return reg.test(validationTarget);
+  }
+  throwError(code, message) {
+    if (!code) return;
+    const error = new Error();
+    let errorMessage = new Map([
+      [400, 'bad request'],
+      [401, 'unAuthorized'],
+      [500, 'internal server error'],
+    ]);
+    if (!errorMessage.get(code) || message) {
+      errorMessage.set(code, message);
+    }
+    error.message = errorMessage.get(code);
+    error.status = code;
+    throw error;
   }
   status404() {
     this.app.use((req, _, next) => {
