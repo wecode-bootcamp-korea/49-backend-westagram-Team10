@@ -54,6 +54,14 @@ const createUser = async (req, res) => {
       error.status = 400;
       throw error;
     }
+
+    if (password.length < 8) {
+      const error = new Error("INVALID_PASSWORD");
+      error.status = 400;
+      throw error;
+    }
+    
+    
     const duplicateEmail = await appDataSource.query(
       `SELECT email FROM users WHERE email = '${email}';`
     );
