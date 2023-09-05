@@ -101,6 +101,7 @@ class App {
     });
     this.app.get('/posts/:id', async (req, res, next) => {
       try {
+        const error = new Error();
         const { id } = req.params;
         if (id) {
           await this.dataSource.query(
@@ -110,7 +111,9 @@ class App {
             WHERE users.id = ${parseInt(id)}`,
             (err, rows) => {
               if (!rows.length) {
-                return res.status(400).json({ message: 'bad request' });
+                error.message = 'key error';
+                error.status = 400;
+                throw error;
               }
               return res.status(200).json({
                 data: {
@@ -124,14 +127,16 @@ class App {
             },
           );
         }
-        return res.status(401).json({ message: 'unAuthorized' });
+        error.message = 'unAuthorized';
+        error.status = 401;
+        throw error;
       } catch (err) {
-        console.error(err);
         next(err);
       }
     });
     this.app.post('/posts', async (req, res, next) => {
       try {
+        const error = new Error();
         const { title, content } = req.body;
         const { id } = req.query;
         if (id) {
@@ -141,15 +146,18 @@ class App {
             `,
             [title, content, parseInt(id)],
           );
-          return res.status(201).json({ message: 'userCreated' });
+          return res.status(201).json({ message: 'post created' });
         }
-        return res.status(401).json({ message: 'unAuthorized' });
+        error.message = 'unAuthorized';
+        error.status = 401;
+        throw error;
       } catch (err) {
         console.error(err);
         next(err);
       }
     });
     this.app.patch('/posts', async (req, res, next) => {
+      const error = new Error();
       try {
         const { content, post_id } = req.body;
         const { id } = req.query;
@@ -172,7 +180,9 @@ class App {
             },
           );
         }
-        return res.status(401).json({ message: 'unAuthorized' });
+        error.message = 'unAuthorized';
+        error.status = 401;
+        throw error;
       } catch (err) {
         console.error(err);
         next(err);
@@ -180,15 +190,18 @@ class App {
     });
     this.app.delete('/posts', async (req, res, next) => {
       try {
+        const error = new Error();
         const { post_id } = req.body;
         const { id } = req.query;
         if (id) {
           await this.dataSource.query(
             `DELETE FROM posts WHERE posts.id=${post_id} AND posts.user_id=${id}`,
           );
-          return res.status(200).json({ message: 'Post deleted' });
+          return res.status(200).json({ message: 'post deleted' });
         }
-        return res.status(401).json({ message: 'unAuthorized' });
+        error.message = 'unAuthorized';
+        error.status = 401;
+        throw error;
       } catch (err) {
         console.error(err);
         next(err);
@@ -207,7 +220,7 @@ class App {
       res.locals.message = err.message;
       res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
       res.status(err.status || 500);
-      res.json({ 'error code': err.status });
+      return res.json({ error: `${err.status} ${err.message}` });
     });
   }
 }
