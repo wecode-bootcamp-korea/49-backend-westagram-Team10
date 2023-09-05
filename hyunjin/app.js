@@ -63,14 +63,26 @@ class App {
     });
     this.app.post('/users', async (req, res, next) => {
       try {
+        const error = new Error();
         const { email, name, profile_image, password } = req.body;
-        await this.dataSource.query(
-          `
+        const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+        const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
+        if (
+          this.isValidData(emailRegExp, email) &&
+          this.isValidData(passwordRegExp, password)
+        ) {
+          await this.dataSource.query(
+            `
             INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
             `,
-          [email, name, profile_image, password],
-        );
-        return res.status(201).json({ message: 'userCreated' });
+            [email, name, profile_image, password],
+          );
+          return res.status(201).json({ message: 'userCreated' });
+        } else {
+          error.message = 'bad request';
+          error.status = 400;
+          throw error;
+        }
       } catch (err) {
         console.error(err);
         next(err);
@@ -207,6 +219,9 @@ class App {
         next(err);
       }
     });
+  }
+  isValidData(reg, validationTarget) {
+    return reg.test(validationTarget);
   }
   status404() {
     this.app.use((req, _, next) => {
