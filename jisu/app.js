@@ -97,26 +97,30 @@ const createUser = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    const { content, user_id, post_image_url} = req.body;
+    const body = req.body;
+    const { user_id, post_image_url} = body;
     
     const isInputNotExist = !user_id || !post_image_url;
     throwError(isInputNotExist, 400, "KEY_ERROR");
     
-    
+    const columnsQueryText = createColumnsQueryText(body);
+    const valuesQueryText = createValuesQueryText(body);
     
     const result = await appDataSource.query(
       `INSERT INTO posts
-      (content, user_id, post_image_url)
+      (${columnsQueryText})
       VALUES
-      ('${content}',
-      '${user_id}', '${post_image_url}')`);
+      ('${valuesQueryText}')`);
       return res.status(201).json({ "message": "postCreated" });
     } catch (error) {
       console.log(error);
       if (error.errno === 1452) {
         return res.status(400).json({ "message": "INVALID_USER_ID" });
       }
-      
+      if (error.errno === 1054) {
+        return res.status(400).json({ "message": "KEY_ERROR"});
+      }
+      return res.status(error.status).json({ "message": error.message });
     }
   };
   
