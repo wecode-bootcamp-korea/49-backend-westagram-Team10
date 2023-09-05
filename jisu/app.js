@@ -60,14 +60,15 @@ const createUser = async (req, res) => {
       error.status = 400;
       throw error;
     }
-    
-    
+
     const duplicateEmail = await appDataSource.query(
       `SELECT email FROM users WHERE email = '${email}';`
     );
     
     if (duplicateEmail.length > 0) {
-      return res.status(400).json({ "error": "Duplicate user email"});
+      const error = new Error("DUPLICATE_USER_EMAIL");
+      error.status = 400;
+      throw error;
     }
 
     const result = await appDataSource.query(
