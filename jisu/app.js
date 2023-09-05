@@ -73,10 +73,11 @@ const createUser = async (req, res) => {
 
     const isPasswordTooShort = password.length < 8;
     throwError(isPasswordTooShort, 400, "INVALID_PASSWORD");
+
     const columnsQueryText = createColumnsQueryText(body);
     const valuesQueryText = createValuesQueryText(body);
 
-    const result = await appDataSource.query(
+    await appDataSource.query(
       `INSERT INTO users
       (${columnsQueryText})
       VALUES
@@ -111,22 +112,22 @@ const createPost = async (req, res) => {
       (${columnsQueryText})
       VALUES
       ('${valuesQueryText}')`);
-      return res.status(201).json({ "message": "postCreated" });
-    } catch (error) {
-      console.log(error);
-      if (error.errno === 1452) {
-        return res.status(400).json({ "message": "INVALID_USER_ID" });
-      }
-      if (error.errno === 1054) {
-        return res.status(400).json({ "message": "KEY_ERROR"});
-      }
-      return res.status(error.status).json({ "message": error.message });
+    return res.status(201).json({ "message": "postCreated" });
+  } catch (error) {
+    console.log(error);
+    if (error.errno === 1452) {
+      return res.status(400).json({ "message": "INVALID_USER_ID" });
     }
-  };
-  
-  const getPosts = async (req, res) => {
-    try {
-      const result = await appDataSource.query(
+    if (error.errno === 1054) {
+      return res.status(400).json({ "message": "KEY_ERROR"});
+    }
+    return res.status(error.status).json({ "message": error.message });
+  }
+};
+
+const getPosts = async (req, res) => {
+  try {
+    const result = await appDataSource.query(
       `SELECT
       posts.user_id AS userId,
       users.profile_image AS userProfileImage,
@@ -181,7 +182,7 @@ const updatePost = async (req, res) => {
       return res.status(401).json({ "error": "Unauthorized" });
     }
     
-    const updated = await appDataSource.query(
+    await appDataSource.query(
       `UPDATE posts
       SET content = '${body.content}',
       post_image_url = '${body.post_image_url}'
@@ -208,17 +209,17 @@ const updatePost = async (req, res) => {
 const deletePost = async (req, res) => {
   try {
     const postId = req.params.post_id;
-    const deleteFromLikes = await appDataSource.query(
+    await appDataSource.query(
       `DELETE FROM likes
       WHERE post_id = ${postId}`
     );
 
-    const deleteFromComments = await appDataSource.query(
+    await appDataSource.query(
       `DELETE FROM comments
       WHERE post_id = ${postId}`
     );
     
-    const result = await appDataSource.query(
+    await appDataSource.query(
       `DELETE FROM posts
       WHERE posts.id = ${postId};`
     );
@@ -239,14 +240,14 @@ const toggleLike = async (req, res) => {
     );
 
     if (duplicateLike.length > 0) {
-      const removed = await appDataSource.query(
+      await appDataSource.query(
         `DELETE FROM likes
         WHERE likes.id = ${duplicateLike[0].id};`
       );
       return res.status(200).json({ "message": "likeDeleted" });
     }
 
-    const result = await appDataSource.query(
+    await appDataSource.query(
       `INSERT INTO likes
       (user_id, post_id)
       VALUES
