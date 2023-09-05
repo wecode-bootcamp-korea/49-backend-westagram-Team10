@@ -63,22 +63,25 @@ const createUser = async (req, res) => {
     const isPasswordTooShort = password.length < 8;
     throwError(isPasswordTooShort, 400, "INVALID_PASSWORD");
 
-    const duplicateEmail = await appDataSource.query(
-      `SELECT email FROM users WHERE email = '${email}';`
-    );
-    const isEmailDuplicate = duplicateEmail.length > 0;
-    throwError(isEmailDuplicate, 400, "DUPLICATE_EMAIL_ADDRESS");
+    let columnsText = profile_image 
+      ? "name, email, password, profile_image" 
+      : "name, email, password";
+    let valuesText = profile_image 
+      ? `'${name}', '${email}', '${password}', '${profile_image}'` 
+      : `'${name}', '${email}', '${password}'`;
 
     const result = await appDataSource.query(
       `INSERT INTO users
-      (name, email, password, profile_image)
+      (${columnsText})
       VALUES
-      ('${name}', '${email}',
-      '${password}', '${profile_image}')`);
+      (${valuesText})`);
     
       return res.status(201).json({ "message": "userCreated" });
   } catch (error) {
     console.log(error);
+    if (error.errno === 1062) {
+      return res.status(400).json({ "message": "DUPLICATE_USER_EMAIL"});
+    }
     return res.status(error.status).json({ "message": error.message });
   }
 };
@@ -86,26 +89,31 @@ const createUser = async (req, res) => {
 const createPost = async (req, res) => {
   try {
     const { content, user_id, post_image_url} = req.body;
-
-    if (!user_id || !post_image_url) {
-
-    }
-
+    
+    const isInputNotExist = !user_id || !post_image_url;
+    throwError(isInputNotExist, 400, "KEY_ERROR");
+    
+    
+    
     const result = await appDataSource.query(
       `INSERT INTO posts
       (content, user_id, post_image_url)
       VALUES
-      ('${body.content}',
-      '${body.user_id}', '${body.post_image_url}')`);
-    return res.status(201).json({ "message": "postCreated" });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const getPosts = async (req, res) => {
-  try {
-    const result = await appDataSource.query(
+      ('${content}',
+      '${user_id}', '${post_image_url}')`);
+      return res.status(201).json({ "message": "postCreated" });
+    } catch (error) {
+      console.log(error);
+      if (error.errno === 1452) {
+        return res.status(400).json({ "message": "INVALID_USER_ID" });
+      }
+      
+    }
+  };
+  
+  const getPosts = async (req, res) => {
+    try {
+      const result = await appDataSource.query(
       `SELECT
       posts.user_id AS userId,
       users.profile_image AS userProfileImage,
