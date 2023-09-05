@@ -43,6 +43,16 @@ function throwError (condition, statusCode, message) {
   }
 }
 
+function createColumnsQueryText (reqBody) {
+  const keys = Object.keys(reqBody);
+  return keys.join(",");  
+}
+
+function createValuesQueryText (reqBody) {
+  const keys = Object.values(reqBody);
+  return keys.join("','");  
+}
+
 const getUsers = async (req, res) => {
   try {
     const users = await appDataSource.query(`SELECT * FROM users`);
@@ -55,32 +65,31 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { name, email, password, profile_image } = req.body;
+    const body = req.body;
+    const { name, email, password } = body;
 
     const isInputNotExist = !name || !email || !password;
     throwError(isInputNotExist, 400, "KEY_ERROR");
 
     const isPasswordTooShort = password.length < 8;
     throwError(isPasswordTooShort, 400, "INVALID_PASSWORD");
-
-    let columnsText = profile_image 
-      ? "name, email, password, profile_image" 
-      : "name, email, password";
-    let valuesText = profile_image 
-      ? `'${name}', '${email}', '${password}', '${profile_image}'` 
-      : `'${name}', '${email}', '${password}'`;
+    const columnsQueryText = createColumnsQueryText(body);
+    const valuesQueryText = createValuesQueryText(body);
 
     const result = await appDataSource.query(
       `INSERT INTO users
-      (${columnsText})
+      (${columnsQueryText})
       VALUES
-      (${valuesText})`);
+      ('${valuesQueryText}')`);
     
-      return res.status(201).json({ "message": "userCreated" });
+    return res.status(201).json({ "message": "userCreated" });
   } catch (error) {
     console.log(error);
     if (error.errno === 1062) {
       return res.status(400).json({ "message": "DUPLICATE_USER_EMAIL"});
+    }
+    if (error.errno === 1054) {
+      return res.status(400).json({ "message": "KEY_ERROR"});
     }
     return res.status(error.status).json({ "message": error.message });
   }
