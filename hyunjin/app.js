@@ -178,6 +178,22 @@ class App {
         next(err);
       }
     });
+    this.app.delete('/posts', async (req, res, next) => {
+      try {
+        const { post_id } = req.body;
+        const { id } = req.query;
+        if (id) {
+          await this.dataSource.query(
+            `DELETE FROM posts WHERE posts.id=${post_id} AND posts.user_id=${id}`,
+          );
+          return res.status(200).json({ message: 'Post deleted' });
+        }
+        return res.status(401).json({ message: 'unAuthorized' });
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
   }
   status404() {
     this.app.use((req, _, next) => {
