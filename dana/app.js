@@ -30,7 +30,7 @@ app.get("/users", async (req, res) => {
   try {
     //from database to backend
     const userData = await myDataSource.query(
-      `SELECT id, name, password FROM users`
+      `SELECT id, name, password, email FROM users`
     );
     console.log("USER DATA:", userData);
 
@@ -52,21 +52,52 @@ app.post("/register", async (req, res) => {
 
     //데이터베이스에 정보 저장
 
-    const newUsername = newUser.name;
-    const newUserpassword = newUser.password;
-    const newUseremail = newUser.email;
+    const newUserName = newUser.name;
+    const newUserPassword = newUser.password;
+    const newUserEmail = newUser.email;
+
+    //Error handling #1 - password length
+    if (newUserPassword.length < 10) {
+      const error = new Error("INVALID_PASSWORD")
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    //Error handling #2 - email, name, password 누락된 경우
+    if (newUserName === "" || newUserPassword === ""  || newUserEmail === "" ) {
+      const error = new Error("KEY_ERROR")
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+    //Error handling #3 -  password 특수 문자 포함
+    if (/[@!-_]/.test(newUserPassword) === false) {
+      const error = new Error("PASSWORD_NO_SYMBOLS")
+      error.statusCode = 400
+
+      throw error
+    }
+
+
 
     const userData = await myDataSource.query(`
        INSERT INTO users (name, password, email) 
-       VALUES ("${newUsername}", "${newUserpassword}", "${newUseremail}")
+       VALUES ("${newUserName}", "${newUserPassword}", "${newUserEmail}")
      `);
 
     console.log("inserted user id", userData.insertId);
 
+
     //from backend to frontend
     return res.status(200).json({ message: "userCreated", users: userData });
-  } catch {
-    console.log("error");
+
+  } catch (error) {
+    console.log(error);
+    return res.status(error.statusCode).json({
+      "message": error.message
+    })
   }
 });
 
