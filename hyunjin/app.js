@@ -72,9 +72,8 @@ class App {
         ) {
           await this.dataSource.query(
             `
-            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
+            INSERT INTO users (email, name, profile_image, password) VALUES ("${email}","${name}","${profile_image}","${password}")
             `,
-            [email, name, profile_image, password],
           );
           return res.status(201).json({ message: 'userCreated' });
         } else {
@@ -140,14 +139,13 @@ class App {
     });
     this.app.post('/posts', async (req, res, next) => {
       try {
-        const { title, content } = req.body;
-        const { id } = req.query;
-        if (id) {
+        const { title, content, user_id } = req.body;
+        console.log(id);
+        if (user_id) {
           await this.dataSource.query(
             `
-            INSERT INTO posts (title, content, user_id) VALUES (?,?,?)
+            INSERT INTO posts (title, content, user_id) VALUES ("${title}","${content}",${user_id})
             `,
-            [title, content, parseInt(id)],
           );
           return res.status(201).json({ message: 'post created' });
         }
@@ -233,7 +231,9 @@ class App {
       res.locals.message = err.message;
       res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
       res.status(err.status || 500);
-      return res.json({ error: `${err.status} ${err.message}` });
+      return res.json({
+        error: `${err.status ? err.status : ''} ${err.message}`,
+      });
     });
   }
 }
