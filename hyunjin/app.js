@@ -140,7 +140,6 @@ class App {
     this.app.post('/posts', async (req, res, next) => {
       try {
         const { title, content, user_id } = req.body;
-        console.log(id);
         if (user_id) {
           await this.dataSource.query(
             `
