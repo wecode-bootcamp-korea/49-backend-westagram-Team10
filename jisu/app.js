@@ -35,6 +35,14 @@ const getGreeting = async (req, res) => {
   }
 };
 
+function throwError (condition, statusCode, message) {
+  if (condition) {
+    const error = new Error(message);
+    error.status = statusCode;
+    throw error;
+  }
+}
+
 const getUsers = async (req, res) => {
   try {
     const users = await appDataSource.query(`SELECT * FROM users`);
@@ -49,27 +57,17 @@ const createUser = async (req, res) => {
   try {
     const { name, email, password, profile_image } = req.body;
 
-    if (!name || !email || !password) {
-      const error = new Error("KEY_ERROR");
-      error.status = 400;
-      throw error;
-    }
+    const isInputNotExist = !name || !email || !password;
+    throwError(isInputNotExist, 400, "KEY_ERROR");
 
-    if (password.length < 8) {
-      const error = new Error("INVALID_PASSWORD");
-      error.status = 400;
-      throw error;
-    }
+    const isPasswordTooShort = password.length < 8;
+    throwError(isPasswordTooShort, 400, "INVALID_PASSWORD");
 
     const duplicateEmail = await appDataSource.query(
       `SELECT email FROM users WHERE email = '${email}';`
     );
-    
-    if (duplicateEmail.length > 0) {
-      const error = new Error("DUPLICATE_USER_EMAIL");
-      error.status = 400;
-      throw error;
-    }
+    const isEmailDuplicate = duplicateEmail.length > 0;
+    throwError(isEmailDuplicate, 400, "DUPLICATE_EMAIL_ADDRESS");
 
     const result = await appDataSource.query(
       `INSERT INTO users
@@ -87,7 +85,12 @@ const createUser = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    const body = req.body;
+    const { content, user_id, post_image_url} = req.body;
+
+    if (!user_id || !post_image_url) {
+
+    }
+
     const result = await appDataSource.query(
       `INSERT INTO posts
       (content, user_id, post_image_url)
