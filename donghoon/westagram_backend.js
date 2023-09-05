@@ -22,7 +22,7 @@ const myDataSource = new DataSource({
 });
 
 app.use(cors());//모든 request에 대해 CORS 요청을 설정하는 법
-app.use(morgan('combined')); 
+app.use(morgan('combined'));
 
 app.use(express.json()); // for parsing application/json
 
@@ -47,21 +47,40 @@ const getUser = async (req, res) => {
 
 const addUser = async (req, res) => {
     try {
-        //1. 유저 정보를 FE에서 받는다
         const newUserData = req.body
-        // console.log(newUserData);
         const name = newUserData.name
-        // console.log(name)
         const password = newUserData.password
-        // console.log(password)
         const email = newUserData.email
-        // console.log(email)
-        // const age = newUserData.age
-        // console.log(age)
+        const age = newUserData.age
+
+        if (email === undefined || name === undefined || password === undefined) {
+            const error = new Error("KEY_ERROR")
+            error.statusCode = 400
+            throw error
+        }
+
+        if (password.length < 8) {
+            const error = new Error("INVALID_PASSWORD_(TOO_SHORT)")
+            error.statusCode = 400
+            throw error
+        }
+        // (심화, 진행) 이메일이 중복되어 이미 가입한 경우
+        // if (1) {
+        //     const error = new Error("DUPLICATED_EMAIL_ADDRESS")
+        //     error.statusCode = 400
+        //     throw error
+        // }
         //3. DATABASE로 정보 저장
+
+        // (심화, 선택) 비밀번호에 특수문자 없을 때
+        // if (password2) {
+        //     const error = new Error("")
+        //     error.statusCode = 400
+        //     throw error
+        // }
         const userData = await myDataSource.query(
             `INSERT INTO users (name, email, password) VALUES ("${name}", "${email}", "${password}");`)
-        return res.status(201).json({ "message" : "userCreated"});
+        return res.status(201).json({ "message": "userCreated" });
     } catch (err) {
         console.log(err);
     }
@@ -70,21 +89,21 @@ const addUser = async (req, res) => {
 
 const addPost = async (req, res) => {
     try {
-//1. 유저 정보를 FE에서 받는다
-    const newPostData = req.body
-    // console.log(newPostData);
-    const title = newPostData.title
-    // console.log(title)
-    const content = newPostData.content
-    // console.log(content)
-    const user_id = newPostData.user_id
-    // console.log(user_id)
-    // const age = newUserData.age
-    // console.log(age)
-    //3. DATABASE로 정보 저장
-    const userData = await myDataSource.query(
-        `INSERT INTO posts (title, content, user_id) VALUES ("${title}", "${content}", "${user_id}");`)
-    return res.status(201).json({ "message" : "postCreated"});
+        //1. 유저 정보를 FE에서 받는다
+        const newPostData = req.body
+        // console.log(newPostData);
+        const title = newPostData.title
+        // console.log(title)
+        const content = newPostData.content
+        // console.log(content)
+        const user_id = newPostData.user_id
+        // console.log(user_id)
+        // const age = newUserData.age
+        // console.log(age)
+        //3. DATABASE로 정보 저장
+        const userData = await myDataSource.query(
+            `INSERT INTO posts (title, content, user_id) VALUES ("${title}", "${content}", "${user_id}");`)
+        return res.status(201).json({ "message": "postCreated" });
     } catch (err) {
         console.log(err);
     }
@@ -94,7 +113,7 @@ const showPosts = async (req, res) => {
     try {
         const postsData = await myDataSource.query("SELECT posts.user_id, users.profile_image AS userProfileImage, posts.id AS postingId, posts.content AS postingContent FROM posts JOIN users ON posts.user_id = users.id;");
         console.log(postsData);
-        return res.status(200).json({ "Data" : postsData })
+        return res.status(200).json({ "Data": postsData })
     } catch (err) {
         console.log(err);
     }
@@ -105,8 +124,8 @@ const searchPostsByUserId = async (req, res) => {
     try {
         const userId = req.params.user_id;
         // console.log("유저아이디가 뭡니까?" + userId);
-        const userPosts = await myDataSource.query (`SELECT * FROM posts WHERE posts.user_id = ${userId}`)
-        return res.status(200).json({"Data" : {userPosts}})
+        const userPosts = await myDataSource.query(`SELECT * FROM posts WHERE posts.user_id = ${userId}`)
+        return res.status(200).json({ "Data": { userPosts } })
     } catch (err) {
         console.log(err)
     }
@@ -131,7 +150,7 @@ const delPosts = async (req, res) => {
     try {
         const postId = req.params.post_id;
         const deletePost = await myDataSource.query(`DELETE FROM posts WHERE id = ${postId}`)
-        return res.status(204).json({"message" : "postingDeleted"})
+        return res.status(204).json({ "message": "postingDeleted" })
     } catch (err) {
         console.log(err)
     }
@@ -144,7 +163,7 @@ const likePost = async (req, res) => {
         const postId = req.body.postId;
         console.log(postId)
         const likePost = await myDataSource.query(`INSERT INTO likes (user_id, post_id) VALUES ("${userId}", "${postId}")`)
-        return res.status(204).json({ "message" : "likeCreated" })
+        return res.status(204).json({ "message": "likeCreated" })
     } catch (err) {
         console.log(err)
     }
