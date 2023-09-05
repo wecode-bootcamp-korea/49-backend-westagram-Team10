@@ -47,9 +47,15 @@ const getUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const newUser = req.body;
+    const { name, email, password, profile_image } = req.body;
+
+    if (!name || !email || !password) {
+      const error = new Error("KEY_ERROR");
+      error.status = 400;
+      throw error;
+    }
     const duplicateEmail = await appDataSource.query(
-      `SELECT email FROM users WHERE email = '${newUser.email}';`
+      `SELECT email FROM users WHERE email = '${email}';`
     );
     
     if (duplicateEmail.length > 0) {
@@ -60,8 +66,8 @@ const createUser = async (req, res) => {
       `INSERT INTO users
       (name, email, password, profile_image)
       VALUES
-      ('${newUser.name}', '${newUser.email}',
-      '${newUser.password}', '${newUser.profile_image}')`);
+      ('${name}', '${email}',
+      '${password}', '${profile_image}')`);
     
       return res.status(201).json({ "message": "userCreated" });
   } catch (error) {
