@@ -3,6 +3,7 @@ const express = require('express');
 const {DataSource} = require('typeorm');
 const cors = require('cors');
 const morgan = require('morgan');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const appDataSource = new DataSource({
@@ -267,6 +268,31 @@ const toggleLike = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const isEmailPasswordEmpty = !email || !password;
+    throwError(isEmailPasswordEmpty, 400, "KEY_ERROR");
+
+    const existingUser = await appDataSource.query(`
+    SELECT id, email, password
+    FROM users
+    WHERE email = '${email}'`);
+    const userNotFound = existingUser.length === 0;
+    throwError(userNotFound, 400, "AUTENTICATION_FAILED");
+
+    const wrongPassword = password !== existingUser[0].password;
+    throwError(wrongPassword, 400, "AUTENTICATION_FAILED");
+
+    const token = jwt.sign({aud: existingUser[0].id, iat: Date.now()}, process.env.JWT_SECRET);
+    return res.status(200).json({ "message": "loginSuccess", "token": token});
+  } catch (error) {
+    console.log(error);
+    return res.status(error.status).json({ "message": error.message });
+  }
+}
+
 app.get('/', getGreeting);
 app.get('/users', getUsers);
 app.post('/users', createUser);
@@ -276,6 +302,7 @@ app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:post_id', updatePost);
 app.delete('/posts/:post_id', deletePost);
 app.post('/likes', toggleLike);
+app.post('/login', login);
 
 const server = http.createServer(app);
 
