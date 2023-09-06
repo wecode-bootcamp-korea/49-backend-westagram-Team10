@@ -4,6 +4,8 @@ const morgan = require("morgan");
 const cors = require("cors");
 const { DataSource } = require("typeorm");
 const dotenv = require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const { check } = require("yargs");
 
 const app = express();
 const express_port = 8000;
@@ -20,13 +22,7 @@ const myDataSource = new DataSource({
 
 app.use(cors()); //모든 request에 대해 CORS 요청을 설정하는 법
 app.use(morgan("combined"));
-
 app.use(express.json()); // for parsing application/json
-
-app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(err.statusCode || 500).json({ error: err.message || "Internal Server Error" });
-});
 
 // 기능함수 생성
 const welcome = async (req, res) => {
@@ -63,14 +59,14 @@ const addUser = async (req, res,) => {
         if (email === undefined || name === undefined || password === undefined) {
             const error = new Error("KEY_ERROR");
             error.statusCode = 400;
-            // error.message = "Missing email, name, or password in the request body."
+            error.message = "Missing email, name, or password in the request body."
             throw error;
         }
 
         if (password.length < 8) {
             const error = new Error("INVALID_PASSWORD_(TOO_SHORT)");
             error.statusCode = 400;
-            // error.message = "Password must be at least 8 characters long.";
+            error.message = "Password must be at least 8 characters long.";
             throw error;
         }
 
@@ -81,7 +77,7 @@ const addUser = async (req, res,) => {
         if (existingUser.length > 0) {
             const error = new Error("EMAIL_ALREADY_EXIST")
             error.statusCode = 400;
-            // error.message = "Email address is already registered.";
+            error.message = "Email address is already registered.";
             throw error;
         }
         // console.log("existing user: ", existingUser);
@@ -89,10 +85,10 @@ const addUser = async (req, res,) => {
         // console.log("T/F", existingUser === []);
         // console.log("Object length : ", existingUser.length)
         // console.log("Object Length Not 0 :", existingUser.length != 0)
-        
+
         // (심화, 선택) 비밀번호에 특수문자 없을 때
         const regex_pattern = /.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\|-].*/
-        
+
         if (!regex_pattern.test(password)) {
             const error = new Error("PASSWORD_MUST_CONTAIN_AT_LEASE_ONE_SPECIAL_CHARACTER")
             error.statusCode = 400
@@ -105,6 +101,7 @@ const addUser = async (req, res,) => {
         return res.status(201).json({ message: "userCreated" });
     } catch (error) {
         console.log(error);
+        return res.status(error.statusCode).json({ "message": error });
     }
 };
 // {"name":"동훈", "password":"자동차좋아요", "email": "email@email.com"}
@@ -200,6 +197,65 @@ const likePost = async (req, res) => {
         console.log(err);
     }
 };
+
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const existingEmail = await myDataSource.query(
+            `SELECT id, password FROM users WHERE email = '${email}'`
+        );
+
+        console.log("existingEmail :", existingEmail);
+        console.log("access inside? :", existingEmail[0].id);
+
+        if (email === undefined || password === undefined) {
+            const error = new Error("KEY_ERROR");
+            error.statusCode = 400;
+            error.message = "Missing email, name, or password in the request body."
+            throw error;
+        }
+
+        if (existingEmail.length = 0) {
+            const error = new Error("CREDENTIAL_INFO_ERROR1")
+            error.statusCode = 400;
+            error.message = "CANNOT LOGIN, PLEASE REGISTER";
+            throw error;
+        }
+
+        const checkPassword = await myDataSource.query(
+            `SELECT id, password FROM users WHERE password = '${password}'`
+        );
+
+        console.log();
+        console.log("checkPassword? : ", checkPassword);
+
+
+
+        if (checkPassword[0].password !== password) {
+            const error = new Error("CREDENTIAL_INFO_ERROR2")
+            error.statusCode = 400;
+            error.message = "CANNOT LOGIN, PLEASE CHECK PW";
+            throw error;
+        }
+
+        const userId = checkPassword[0].id
+        const secretKey = "MapMethod";
+        const payload = { id: userId };
+        const token = jwt.sign(payload, secretKey);
+
+        console.log(token);
+
+        return res.status(200).json({
+            "message": "Login Successful",
+            "token": token
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(error.statusCode).json({ "message": error.message, })
+    }
+};
+
 // API Lists
 
 //0. Server Launch Message
@@ -228,6 +284,10 @@ app.put("/posts/:post_id", delPosts);
 
 // Assignment 8. 좋아요 누르기
 app.post("/likes/:user_id", likePost);
+
+// 로그인
+app.post("/login", login)
+
 
 const server = http.createServer(app); // express app 으로 서버를 만듭니다.
 
