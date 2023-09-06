@@ -67,7 +67,8 @@ class App {
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
         const [existUser] = await this.dataSource.query(
-          `SELECT email FROM users WHERE email = "${email}"`,
+          `SELECT email FROM users WHERE email = ?`,
+          [email],
         );
         if (!existUser) {
           if (
@@ -76,8 +77,9 @@ class App {
           ) {
             await this.dataSource.query(
               `
-            INSERT INTO users (email, name, profile_image, password) VALUES ("${email}","${name}","${profile_image}","${password}")
+            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
             `,
+              [email, name, profile_image, password],
             );
             return res.status(201).json({ message: 'userCreated' });
           } else {
@@ -93,22 +95,20 @@ class App {
     });
     this.app.get('/posts', async (_, res, next) => {
       try {
-        await this.dataSource.query(
+        const rows = await this.dataSource.query(
           `SELECT users.id, users.profile_image, users.name, posts.id AS post_id, posts.content
           FROM users
           LEFT JOIN posts ON users.id = posts.user_id
           `,
-          (err, rows) => {
-            return res.status(200).json({
-              data: rows.map((row) => ({
-                userId: row.id,
-                userProfileImage: row.profile_image,
-                postingId: row.post_id,
-                postingContent: row.content,
-              })),
-            });
-          },
         );
+        return res.status(200).json({
+          data: rows.map((row) => ({
+            userId: row.id,
+            userProfileImage: row.profile_image,
+            postingId: row.post_id,
+            postingContent: row.content,
+          })),
+        });
       } catch (err) {
         console.error(err);
         next(err);
@@ -118,26 +118,25 @@ class App {
       try {
         const { id } = req.params;
         if (id) {
-          await this.dataSource.query(
+          const rows = await this.dataSource.query(
             `SELECT users.id, users.name, users.profile_image, posts.id, posts.content
             FROM users  
             LEFT JOIN posts ON users.id = posts.user_id
-            WHERE users.id = ${parseInt(id)}`,
-            (err, rows) => {
-              if (!rows.length) {
-                this.throwError(400);
-              }
-              return res.status(200).json({
-                data: {
-                  userId: rows[0].id,
-                  userProfileImage: rows[0].profile_image,
-                  postings: rows.map((raw) => {
-                    return { postingId: raw.id, postingContent: raw.content };
-                  }),
-                },
-              });
-            },
+            WHERE users.id =?`,
+            [parseInt(id)],
           );
+          if (!rows.length) {
+            this.throwError(400);
+          }
+          return res.status(200).json({
+            data: {
+              userId: rows[0].id,
+              userProfileImage: rows[0].profile_image,
+              postings: rows.map((raw) => {
+                return { postingId: raw.id, postingContent: raw.content };
+              }),
+            },
+          });
         }
         this.throwError(401);
       } catch (err) {
@@ -150,8 +149,9 @@ class App {
         if (user_id) {
           await this.dataSource.query(
             `
-            INSERT INTO posts (title, content, user_id) VALUES ("${title}","${content}",${user_id})
+            INSERT INTO posts (title, content, user_id) VALUES (?,?,?)
             `,
+            [title, content, user_id],
           );
           return res.status(201).json({ message: 'post created' });
         }
@@ -168,21 +168,19 @@ class App {
         if (id) {
           await this.dataSource.query(
             `
-            UPDATE posts SET content="${content}" WHERE user_id=${parseInt(
-              id,
-            )} AND id=${post_id}
+            UPDATE posts SET content = ? WHERE user_id = ? AND id = ?
             `,
+            [content, parseInt(id), post_id],
           );
-          await this.dataSource.query(
+          const rows = await this.dataSource.query(
             `SELECT users.id, users.name, posts.id AS post_id, posts.title, posts.content
             FROM users
             LEFT JOIN posts ON users.id = posts.user_id
-            WHERE user_id = ${parseInt(id)} AND posts.id = ${post_id}
+            WHERE user_id = ? AND posts.id = ?
             `,
-            (err, rows) => {
-              return res.status(201).json({ data: rows });
-            },
+            [parseInt(id), post_id],
           );
+          return res.status(201).json({ data: rows });
         }
         this.throwError(401);
       } catch (err) {
@@ -196,7 +194,8 @@ class App {
         const { id } = req.query;
         if (id) {
           await this.dataSource.query(
-            `DELETE FROM posts WHERE posts.id=${post_id} AND posts.user_id=${id}`,
+            `DELETE FROM posts WHERE posts.id=? AND posts.user_id=?`,
+            [post_id, id],
           );
           return res.status(200).json({ message: 'post deleted' });
         }
@@ -211,7 +210,8 @@ class App {
         const { user_id, post_id, isLikeOn } = req.body;
         if (isLikeOn === 'Y') {
           await this.dataSource.query(
-            `INSERT INTO likes (user_id, post_id) VALUES (${user_id}, ${post_id})`,
+            `INSERT INTO likes (user_id, post_id) VALUES (?,?)`,
+            [user_id, post_id],
           );
           return res
             .status(200)
