@@ -65,7 +65,7 @@ app.post("/register", async (req, res) => {
     }
 
     //Error handling #2 - email, name, password 누락된 경우
-    if (newUserName === "" || newUserPassword === ""  || newUserEmail === "" ) {
+    if (newUserName === undefined || newUserPassword === undefined || newUserEmail=== undefined) {
       const error = new Error("KEY_ERROR")
       error.statusCode = 400;
 
@@ -78,6 +78,18 @@ app.post("/register", async (req, res) => {
       error.statusCode = 400
 
       throw error
+    }
+
+
+    //Error handling #4 -  이메일 중복
+    const emailCheck = await myDataSource.query(
+      `SELECT email FROM users WHERE email = "${newUserEmail}"`);
+
+    if (emailCheck.length !== 0) {
+      const error = new Error("DUPLICATED_EMAIL_ADDRESS")
+      error.statusCode = 400;
+
+      throw error;
     }
 
 
