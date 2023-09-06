@@ -100,7 +100,7 @@ class App {
     // 로그인
     this.app.post('/signin', async (req, res, next) => {
       try {
-        const { user_id, email, password } = req.body;
+        const { email, password } = req.body;
         const [existUser] = await this.dataSource.query(
           `SELECT id, email, password FROM users WHERE email = ?`,
           [email],
@@ -110,7 +110,7 @@ class App {
           if (result) {
             res.header(
               'accessToken',
-              jwt.sign({ user_id }, process.env.JWT_SECRET),
+              jwt.sign(existUser.id, process.env.JWT_SECRET),
             );
             return res.status(201).json({ message: 'token created' });
           }
