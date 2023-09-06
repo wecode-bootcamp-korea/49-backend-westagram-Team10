@@ -97,6 +97,30 @@ class App {
         next(err);
       }
     });
+    // 로그인
+    this.app.post('/signin', async (req, res, next) => {
+      try {
+        const { user_id, email, password } = req.body;
+        const [existUser] = await this.dataSource.query(
+          `SELECT id, email, password FROM users WHERE email = ?`,
+          [email],
+        );
+        if (existUser && existUser.email) {
+          const result = await bcrypt.compare(password, existUser.password);
+          if (result) {
+            res.header(
+              'accessToken',
+              jwt.sign({ user_id }, process.env.JWT_SECRET),
+            );
+            return res.status(201).json({ message: 'token created' });
+          }
+        }
+        this.throwError(400);
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
     this.app.get('/posts', async (_, res, next) => {
       try {
         const rows = await this.dataSource.query(
