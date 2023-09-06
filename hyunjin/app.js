@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { DataSource } = require('typeorm');
 
@@ -61,11 +63,13 @@ class App {
         next(err);
       }
     });
-    this.app.post('/users', async (req, res, next) => {
+    // 회원가입
+    this.app.post('/signup', async (req, res, next) => {
       try {
         const { email, name, profile_image, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
+        const hash = await bcrypt.hash(password, 12);
         const [existUser] = await this.dataSource.query(
           `SELECT email FROM users WHERE email = ?`,
           [email],
@@ -79,7 +83,7 @@ class App {
               `
             INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
             `,
-              [email, name, profile_image, password],
+              [email, name, profile_image, hash],
             );
             return res.status(201).json({ message: 'userCreated' });
           } else {
