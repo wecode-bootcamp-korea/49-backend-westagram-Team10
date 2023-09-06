@@ -1,9 +1,24 @@
 const http = require('http')
 const express = require('express')
 const dotenv = require('dotenv')
+const jwt = require('jsonwebtoken');
 const { DataSource } = require('typeorm');
 
 dotenv.config()
+
+/*
+const payLoad = { foo: 'bar' }; 
+const secretKey = 'mySecretKey'; //실제로 Secret Key는 노출되면 안 되기 때문에 환경변수로 관리해 주어야 합니다
+const jwtToken = jwt.sign(payLoad, secretKey);
+
+console.log(jwtToken)
+
+
+// JWT 확인
+const decoded = jwt.verify(jwtToken, secretKey);
+
+console.log(decoded)
+*/
 
 const myDataSource = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
@@ -95,6 +110,8 @@ app.post('/users', async(req, res) => {
 		console.log(err)
 	}
 })
+
+// 📟 로그인
 
 // 과제 3. 게시글 등록
 
