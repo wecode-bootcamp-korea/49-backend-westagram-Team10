@@ -66,7 +66,7 @@ class App {
     // 회원가입
     this.app.post('/signup', async (req, res, next) => {
       try {
-        const { email, name, profile_image, password } = req.body;
+        const { email, name, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
         const hash = await bcrypt.hash(password, 12);
@@ -74,6 +74,9 @@ class App {
           `SELECT email FROM users WHERE email = ?`,
           [email],
         );
+        if (!email && !name && !password) {
+          this.throwError(400, 'key error');
+        }
         if (!existUser) {
           if (
             this.isValidData(emailRegExp, email) &&
@@ -81,9 +84,9 @@ class App {
           ) {
             await this.dataSource.query(
               `
-            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,?,?)
+            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,"baseUrl",?)
             `,
-              [email, name, profile_image, hash],
+              [email, name, hash],
             );
             return res.status(201).json({ message: 'userCreated' });
           } else {
