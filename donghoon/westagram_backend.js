@@ -5,9 +5,6 @@ const cors = require("cors");
 const { DataSource } = require("typeorm");
 const dotenv = require("dotenv").config();
 
-const bodyParser = require("body-parser");
-const jsonParser = bodyParser.json();
-
 const app = express();
 const express_port = 8000;
 
