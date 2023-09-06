@@ -69,14 +69,14 @@ class App {
         const { email, name, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
-        const hash = await bcrypt.hash(password, 12);
         const [existUser] = await this.dataSource.query(
           `SELECT email FROM users WHERE email = ?`,
           [email],
         );
-        if (!email && !name && !password) {
+        if (!email || !name || !password) {
           this.throwError(400, 'key error');
         }
+        const hash = await bcrypt.hash(password, 12);
         if (!existUser) {
           if (
             this.isValidData(emailRegExp, email) &&
