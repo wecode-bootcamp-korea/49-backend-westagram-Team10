@@ -66,18 +66,25 @@ class App {
         const { email, name, profile_image, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
         const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
-        if (
-          this.isValidData(emailRegExp, email) &&
-          this.isValidData(passwordRegExp, password)
-        ) {
-          await this.dataSource.query(
-            `
+        const [existUser] = await this.dataSource.query(
+          `SELECT email FROM users WHERE email = "${email}"`,
+        );
+        if (!existUser) {
+          if (
+            this.isValidData(emailRegExp, email) &&
+            this.isValidData(passwordRegExp, password)
+          ) {
+            await this.dataSource.query(
+              `
             INSERT INTO users (email, name, profile_image, password) VALUES ("${email}","${name}","${profile_image}","${password}")
             `,
-          );
-          return res.status(201).json({ message: 'userCreated' });
+            );
+            return res.status(201).json({ message: 'userCreated' });
+          } else {
+            this.throwError(400);
+          }
         } else {
-          this.throwError(400);
+          this.throwError(400, 'duplicated email');
         }
       } catch (err) {
         console.error(err);
@@ -194,6 +201,23 @@ class App {
           return res.status(200).json({ message: 'post deleted' });
         }
         this.throwError(401);
+      } catch (err) {
+        console.error(err);
+        next(err);
+      }
+    });
+    this.app.post('/likes', async (req, res, next) => {
+      try {
+        const { user_id, post_id, isLikeOn } = req.body;
+        if (isLikeOn === 'Y') {
+          await this.dataSource.query(
+            `INSERT INTO likes (user_id, post_id) VALUES (${user_id}, ${post_id})`,
+          );
+          return res
+            .status(200)
+            .json({ message: 'like created', isLikeON: 'Y' });
+        }
+        this.throwError(400);
       } catch (err) {
         console.error(err);
         next(err);
