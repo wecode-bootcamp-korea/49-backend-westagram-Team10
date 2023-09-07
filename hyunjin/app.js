@@ -113,7 +113,9 @@ class App {
           if (result) {
             res.header(
               'accessToken',
-              jwt.sign(existUser.id, process.env.JWT_SECRET),
+              jwt.sign({ id: existUser.id }, process.env.JWT_SECRET, {
+                expiresIn: '30d',
+              }),
             );
             return res.status(201).json({ message: 'token created' });
           }
