@@ -101,7 +101,7 @@ class App {
       }
     });
     // 로그인
-    this.app.post('/users/signin', async (req, res, next) => {
+    this.app.post('/users/login', async (req, res, next) => {
       try {
         const { email, password } = req.body;
         const [existUser] = await this.dataSource.query(
