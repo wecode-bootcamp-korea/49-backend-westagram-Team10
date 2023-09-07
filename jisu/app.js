@@ -22,10 +22,10 @@ appDataSource.initialize()
 
 const app = express();
 
-app.use(express.json());
 app.use(cors({
   origin: '*'
 }));
+app.use(express.json());
 app.use(morgan('dev'));
 
 const getGreeting = async (req, res) => {
@@ -72,8 +72,10 @@ const createUser = async (req, res) => {
     const isInputNotExist = !name || !email || !password;
     throwError(isInputNotExist, 400, "KEY_ERROR");
 
-    const isPasswordTooShort = password.length < 8;
-    throwError(isPasswordTooShort, 400, "INVALID_PASSWORD");
+    const isPasswordInvalid = new RegExp(
+      '^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,30})'
+    ).test(password);
+    throwError(!isPasswordInvalid, 400, "INVALID_PASSWORD");
 
     const columnsQueryText = createColumnsQueryText(body);
     const valuesQueryText = createValuesQueryText(body);
@@ -316,7 +318,7 @@ const login = async (req, res) => {
     console.log(error);
     return res.status(error.status).json({ "message": error.message });
   }
-}
+};
 
 app.get('/', getGreeting);
 app.get('/users', getUsers);
@@ -326,9 +328,9 @@ app.get('/posts', getPosts);
 app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:post_id', updatePost);
 app.delete('/posts/:post_id', deletePost);
-app.post('/likes', createLike);
-app.delete('/likes', deleteLike);
-app.post('/login', login);
+app.post('/posts/likes', createLike);
+app.delete('/posts/likes', deleteLike);
+app.post('/users/login', login);
 
 const server = http.createServer(app);
 
