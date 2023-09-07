@@ -84,7 +84,7 @@ class App {
           ) {
             await this.dataSource.query(
               `
-            INSERT INTO users (email, name, profile_image, password) VALUES (?,?,"baseUrl",?)
+            INSERT INTO users (email, name, password) VALUES (?,?,?)
             `,
               [email, name, hash],
             );
