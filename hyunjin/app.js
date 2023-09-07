@@ -120,7 +120,7 @@ class App {
             return res.status(201).json({ message: 'token created' });
           }
         }
-        this.throwError(400);
+        this.throwError(400, "user does'nt exist");
       } catch (err) {
         console.error(err);
         next(err);
