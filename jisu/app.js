@@ -148,6 +148,8 @@ const getPosts = async (req, res) => {
 const getUserPosts = async (req, res) => {
   try {
     const userId = req.params.user_id;
+    throwError(!userId, 400, "KEY_ERROR");
+
     const user = await appDataSource.query(
       `SELECT
       users.id AS userId,
@@ -155,8 +157,7 @@ const getUserPosts = async (req, res) => {
       FROM users
       WHERE users.id = ${userId};`
     );
-    
-    result = user[0];
+    const result = user[0];
     const userNotFound = !result;
     throwError(userNotFound, 404, "USER_NOT_FOUND");
 
@@ -186,9 +187,7 @@ const updatePost = async (req, res) => {
       WHERE posts.id = ${post_id};`
     );
 
-    if (oldPost[0].user_id !== body.user_id) {
-      return res.status(401).json({ "error": "Unauthorized" });
-    }
+    throwError(oldPost[0].user_id !== body.user_id, 401, "UNAUTHORIZED");
     
     await appDataSource.query(
       `UPDATE posts
@@ -211,12 +210,21 @@ const updatePost = async (req, res) => {
     return res.status(200).json({ "data": result });
   } catch (error) {
     console.log(error);
+    return res.status(error.status).json({ "message": error.message });
   }
 };
 
 const deletePost = async (req, res) => {
   try {
     const postId = req.params.post_id;
+
+    throwError(!postId, 400, "KEY_ERROR");
+
+    const existingPost = await appDataSource.query(`
+      SELECT * FROM posts WHERE id = ${postId};
+    `);
+    throwError(existingPost.length === 0, 400, "POST_NOT_FOUND");
+    
     await appDataSource.query(
       `DELETE FROM likes
       WHERE post_id = ${postId}`
