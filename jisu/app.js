@@ -108,7 +108,7 @@ const createPost = async (req, res) => {
     const columnsQueryText = createColumnsQueryText(body);
     const valuesQueryText = createValuesQueryText(body);
     
-    const result = await appDataSource.query(
+    await appDataSource.query(
       `INSERT INTO posts
       (${columnsQueryText})
       VALUES
@@ -141,6 +141,7 @@ const getPosts = async (req, res) => {
     return res.status(200).json({ "data": result });
   } catch (error) {
     console.log(error);
+    return res.status(error.status).json({ "message": error.message });
   }
 };
 
@@ -154,7 +155,6 @@ const getUserPosts = async (req, res) => {
       FROM users
       WHERE users.id = ${userId};`
     );
-
     
     result = user[0];
     const userNotFound = !result;
@@ -238,7 +238,7 @@ const deletePost = async (req, res) => {
   }
 };
 
-const toggleLike = async (req, res) => {
+const createLike = async (req, res) => {
   try {
     const postId = req.body.post_id;
     const userId = req.body.user_id;
@@ -247,13 +247,7 @@ const toggleLike = async (req, res) => {
       WHERE user_id = ${userId} AND post_id = ${postId};`
     );
 
-    if (duplicateLike.length > 0) {
-      await appDataSource.query(
-        `DELETE FROM likes
-        WHERE likes.id = ${duplicateLike[0].id};`
-      );
-      return res.status(200).json({ "message": "likeDeleted" });
-    }
+    throwError(duplicateLike.length > 0, 400, "DUPLICATE_LIKES_REQUESTED");
 
     await appDataSource.query(
       `INSERT INTO likes
@@ -265,6 +259,29 @@ const toggleLike = async (req, res) => {
     return res.status(200).json({ "message": "likeCreated" });
   } catch (error) {
     console.log(error);
+    return res.status(error.status).json({ "message": error.message });
+  }
+};
+
+const deleteLike = async (req, res) => {
+  try {
+    const postId = req.body.post_id;
+    const userId = req.body.user_id;
+    const duplicateLike = await appDataSource.query(
+      `SELECT * FROM likes
+      WHERE user_id = ${userId} AND post_id = ${postId};`
+    );
+
+    throwError(duplicateLike.length === 0, 400, "LIKES_NOT_FOUND");
+
+    await appDataSource.query(
+      `DELETE FROM likes
+      WHERE likes.id = ${duplicateLike[0].id};`
+    );
+    return res.status(200).json({ "message": "likeDeleted" });
+  } catch (error) {
+    console.log(error);
+    return res.status(error.status).json({ "message": error.message });
   }
 };
 
@@ -301,7 +318,8 @@ app.get('/posts', getPosts);
 app.get('/users/:user_id/posts', getUserPosts);
 app.put('/posts/:post_id', updatePost);
 app.delete('/posts/:post_id', deletePost);
-app.post('/likes', toggleLike);
+app.post('/likes', createLike);
+app.delete('/likes', deleteLike);
 app.post('/login', login);
 
 const server = http.createServer(app);
