@@ -1,5 +1,6 @@
 const http = require('http')
 const express = require('express')
+const cors = require('cors')
 const dotenv = require('dotenv')
 const { DataSource } = require('typeorm');
 const jwt = require('jsonwebtoken');
@@ -24,6 +25,7 @@ myDataSource.initialize()
 
 const app = express()
 
+app.use(cors())
 app.use(express.json()) // for parsing application/json
 
 app.get("/", async (req, res) => {
@@ -60,7 +62,7 @@ app.get('/users', async (req, res) => {
 
 //과제 2. 회원가입하기 - users 생성
 
-app.post('/users', async (req, res) => {
+app.post('/user/signup', async (req, res) => {
   try {
 
     //1. user 정보를 frontend로부터 받는다.
@@ -131,8 +133,7 @@ app.post('/users', async (req, res) => {
 })
 
 // 📟 로그인
-
-app.post("/login", async (req, res) => {
+app.post("/user/login", async (req, res) => {
   try {
     
     const email = req.body.email
@@ -154,7 +155,7 @@ app.post("/login", async (req, res) => {
     console.log('existing user: ', existingUser)
 
     // 가입된 유저가 아니라면
-    if (existingUser === undefined) {
+    if (existingUser.length === 0) {  //  = 는 대입 연산자
       const error = new Error("NON_EXIST_EMAIL_ADDRESS")
       error.statusCode = 400
       throw error
@@ -165,28 +166,30 @@ app.post("/login", async (req, res) => {
        SELECT password FROM users WHERE email='${email}';
     `)
 
-    if(password !== passwordCheck) {
+    console.log('passwordCheck : ', passwordCheck)
+
+    if(password !== passwordCheck[0].password) {
       const error = new Error("INCORRECT_PASSPWORD")
       error.statusCode = 400
       throw error
     }
 
-
     // generate token
     // 1. use library allowing generating token
     // 2. {"id": 10} // 1hour
-    const token = jwt.sign({ id:30 }, 'secret_key')
     // 3. signature
+   // const token = jwt.sign({ id:30 }, 'secret_key')
 
-    return res.status(200).json({
-      "message": "LOGIN_SUCCESS",
-      "accessToken": token
-    })
+    console.log("message : 로그인 성공");
     
+    return res.status(200).json({
+      "message": "LOGIN_SUCCESS"/*,
+      "accessToken": token*/
+    })
 
   } catch (error) {
     console.log(error)
-    return res.statusCode(error.statusCode).json({
+    return res.status(error.statusCode).json({
       "message": error.message
     })
   }
