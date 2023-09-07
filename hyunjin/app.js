@@ -64,7 +64,7 @@ class App {
       }
     });
     // 회원가입
-    this.app.post('/signup', async (req, res, next) => {
+    this.app.post('/users/signup', async (req, res, next) => {
       try {
         const { email, name, password } = req.body;
         const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
@@ -101,7 +101,7 @@ class App {
       }
     });
     // 로그인
-    this.app.post('/signin', async (req, res, next) => {
+    this.app.post('/users/signin', async (req, res, next) => {
       try {
         const { email, password } = req.body;
         const [existUser] = await this.dataSource.query(
