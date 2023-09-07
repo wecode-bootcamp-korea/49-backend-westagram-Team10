@@ -124,34 +124,35 @@ class App {
         next(err);
       }
     });
-    this.app.get('/posts', async (_, res, next) => {
+    // this.app.get('/posts', async (_, res, next) => {
+    //   try {
+    //     const rows = await this.dataSource.query(
+    //       `SELECT users.id, users.profile_image, users.name, posts.id AS post_id, posts.content
+    //       FROM users
+    //       LEFT JOIN posts ON users.id = posts.user_id
+    //       `,
+    //     );
+    //     return res.status(200).json({
+    //       data: rows.map((row) => ({
+    //         userId: row.id,
+    //         userProfileImage: row.profile_image,
+    //         postingId: row.post_id,
+    //         postingContent: row.content,
+    //       })),
+    //     });
+    //   } catch (err) {
+    //     console.error(err);
+    //     next(err);
+    //   }
+    // });
+    this.app.get('/posts', async (req, res, next) => {
       try {
-        const rows = await this.dataSource.query(
-          `SELECT users.id, users.profile_image, users.name, posts.id AS post_id, posts.content
-          FROM users
-          LEFT JOIN posts ON users.id = posts.user_id
-          `,
-        );
-        return res.status(200).json({
-          data: rows.map((row) => ({
-            userId: row.id,
-            userProfileImage: row.profile_image,
-            postingId: row.post_id,
-            postingContent: row.content,
-          })),
-        });
-      } catch (err) {
-        console.error(err);
-        next(err);
-      }
-    });
-    this.app.get('/posts/:id', async (req, res, next) => {
-      try {
-        const { id } = req.params;
+        const token = req.header('Authorization');
+        const id = jwt.verify(token, process.env.JWT_SECRET);
         if (id) {
           const rows = await this.dataSource.query(
             `SELECT users.id, users.name, users.profile_image, posts.id, posts.content
-            FROM users  
+            FROM users
             LEFT JOIN posts ON users.id = posts.user_id
             WHERE users.id =?`,
             [parseInt(id)],
@@ -170,6 +171,7 @@ class App {
           });
         }
         this.throwError(401);
+        return;
       } catch (err) {
         next(err);
       }
