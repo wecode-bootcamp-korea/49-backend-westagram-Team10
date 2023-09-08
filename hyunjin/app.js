@@ -4,8 +4,9 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { DataSource } = require('typeorm');
-
+const { dataSource } = require('./models');
+const { signUpController } = require('./controllers/user.controller');
+const { throwError } = require('./middlewares');
 const app = express();
 
 app.set('port', process.env.PORT || 8000);
@@ -13,14 +14,6 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const dataSource = new DataSource({
-  type: process.env.TYPEORM_CONNECTION,
-  host: process.env.TYPEORM_HOST,
-  port: process.env.TYPEORM_PORT,
-  username: process.env.TYPEORM_USERNAME,
-  password: process.env.TYPEORM_PASSWORD,
-  database: process.env.TYPEORM_DATABASE,
-});
 dataSource
   .initialize()
   .then(() => {
@@ -48,42 +41,7 @@ app.get('/users', async (_, res, next) => {
   }
 });
 // 회원가입
-app.post('/users/signup', async (req, res, next) => {
-  try {
-    const { email, name, password } = req.body;
-    const emailRegExp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
-    const passwordRegExp = /[ !@#$%^&*(),.?":{}|<>]/g;
-    const [existUser] = await dataSource.query(
-      `SELECT email FROM users WHERE email = ?`,
-      [email],
-    );
-    if (!email || !name || !password) {
-      throwError(400, 'key error');
-    }
-    const hash = await bcrypt.hash(password, 12);
-    if (!existUser) {
-      if (
-        isValidData(emailRegExp, email) &&
-        isValidData(passwordRegExp, password)
-      ) {
-        await dataSource.query(
-          `
-        INSERT INTO users (email, name, password) VALUES (?,?,?)
-        `,
-          [email, name, hash],
-        );
-        return res.status(201).json({ message: 'userCreated' });
-      } else {
-        throwError(400);
-      }
-    } else {
-      throwError(400, 'duplicated email');
-    }
-  } catch (err) {
-    console.error(err);
-    next(err);
-  }
-});
+app.post('/users/signup', signUpController);
 // 로그인
 app.post('/users/login', async (req, res, next) => {
   try {
@@ -240,24 +198,7 @@ app.post('/likes', async (req, res, next) => {
     next(err);
   }
 });
-const isValidData = (reg, validationTarget) => {
-  return reg.test(validationTarget);
-};
-const throwError = (code, message) => {
-  if (!code) return;
-  const error = new Error();
-  let errorMessage = new Map([
-    [400, 'bad request'],
-    [401, 'unAuthorized'],
-    [500, 'internal server error'],
-  ]);
-  if (!errorMessage.get(code) || message) {
-    errorMessage.set(code, message);
-  }
-  error.message = errorMessage.get(code);
-  error.status = code;
-  throw error;
-};
+
 app.use((req, _, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`);
   error.status = 404;
